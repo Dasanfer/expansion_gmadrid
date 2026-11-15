@@ -1,0 +1,1226 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Inscripción de Expansión - GMadrid</title>
+<link rel="icon"
+type="image/svg+xml"
+href='data:image/svg+xml,
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<rect y="0" width="64" height="10.6" fill="%23e40303"/>
+<rect y="10.6" width="64" height="10.6" fill="%23ff8c00"/>
+<rect y="21.2" width="64" height="10.6" fill="%23ffed00"/>
+<rect y="31.8" width="64" height="10.6" fill="%23008026"/>
+<rect y="42.4" width="64" height="10.6" fill="%230044d4"/>
+<rect y="53" width="64" height="11" fill="%23750087"/>
+<rect x="12" y="12" width="40" height="40" rx="8" fill="white" stroke="black" stroke-width="3"/>
+<circle cx="22" cy="22" r="3.5" fill="black"/>
+<circle cx="42" cy="22" r="3.5" fill="black"/>
+<circle cx="32" cy="32" r="3.5" fill="black"/>
+<circle cx="22" cy="42" r="3.5" fill="black"/>
+<circle cx="42" cy="42" r="3.5" fill="black"/>
+</svg>'>
+
+<!-- LIBRERÍA CRYPTO-JS PARA ENCRIPTACIÓN SEGURA AES -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+
+<style>
+:root {
+    --primary: #750087;
+    --primary-dark: #580065;
+    --card-bg: rgba(255, 255, 255, 0.95);
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --border-color: rgba(216, 180, 254, 0.35);
+    --radius: 14px;
+}
+
+html, body {
+    width: 100%;
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    color: var(--text-main);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    overflow-x: hidden;
+}
+
+#floating-games-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    z-index: -3;
+    pointer-events: none;
+}
+
+.floating-game-item {
+    position: absolute;
+    font-size: 24px;
+    opacity: 0.35;
+    user-select: none;
+    will-change: transform, opacity;
+}
+
+@keyframes lanzarDeLadoALado {
+    0% { transform: translate(var(--start-x), var(--start-y)) rotate(0deg) scale(0.8); opacity: 0; }
+    10% { opacity: 0.45; }
+    90% { opacity: 0.45; }
+    100% { transform: translate(var(--end-x), var(--end-y)) rotate(var(--rotacion)) scale(1.1); opacity: 0; }
+}
+
+@keyframes bgArcoiris {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: linear-gradient(135deg, rgba(228, 3, 3, 0.14), rgba(255, 140, 0, 0.14), rgba(255, 237, 0, 0.14), rgba(0, 128, 38, 0.14), rgba(0, 68, 212, 0.14), rgba(117, 0, 135, 0.14));
+    background-size: 400% 400%;
+    z-index: -2;
+    animation: bgArcoiris 15s ease infinite;
+    pointer-events: none;
+}
+
+@keyframes esquinaArcoiris1 {
+    0% { transform: scale(1) rotate(0deg); opacity: 0.6; }
+    50% { transform: scale(1.15) rotate(180deg); opacity: 0.85; }
+    100% { transform: scale(1) rotate(360deg); opacity: 0.6; }
+}
+
+body::after {
+    content: '';
+    position: fixed;
+    top: -80px; right: -80px; width: 280px; height: 280px;
+    background: linear-gradient(135deg, #e40303, #ff8c00, #ffed00, #008026, #0044d4, #750087);
+    border-radius: 50%;
+    z-index: -1;
+    filter: blur(45px);
+    pointer-events: none;
+    animation: esquinaArcoiris1 10s ease-in-out infinite;
+}
+
+.esquina-opuesta-bg {
+    position: fixed;
+    bottom: -80px; left: -80px; width: 280px; height: 280px;
+    background: linear-gradient(135deg, #750087, #0044d4, #008026, #ffed00, #ff8c00, #e40303);
+    border-radius: 50%;
+    z-index: -1;
+    filter: blur(45px);
+    pointer-events: none;
+    animation: esquinaArcoiris2 10s ease-in-out infinite;
+}
+
+@keyframes esquinaArcoiris2 {
+    0% { transform: scale(1.15) rotate(360deg); opacity: 0.85; }
+    50% { transform: scale(1) rotate(180deg); opacity: 0.6; }
+    100% { transform: scale(1.15) rotate(0deg); opacity: 0.85; }
+}
+
+/* BOTÓN FLOTANTE SUPERIOR DERECHA PARA ABRIR INFO */
+.btn-flotante-info {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    width: 46px;
+    height: 46px;
+    background: #ffffff;
+    border: 2px solid #d8b4fe;
+    border-radius: 50%;
+    box-shadow: 0 4px 15px rgba(117, 0, 135, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    cursor: pointer;
+    z-index: 1000;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    padding: 0;
+    margin: 0;
+}
+
+.btn-flotante-info:hover {
+    transform: scale(1.12);
+    background: #faf5ff;
+    border-color: #750087;
+    box-shadow: 0 6px 20px rgba(117, 0, 135, 0.3);
+}
+
+/* OFFCANVAS / MODAL LATERAL DERECHO */
+.offcanvas-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    z-index: 9998;
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.35s;
+}
+
+.offcanvas-overlay.abierto {
+    visibility: visible;
+    opacity: 1;
+}
+
+.offcanvas-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 100%;
+    height: 100vh;
+    background: #ffffff;
+    box-shadow: -15px 0 40px rgba(117, 0, 135, 0.25);
+    z-index: 9999;
+    box-sizing: border-box;
+    padding: 24px;
+    overflow-y: auto;
+    transform: translateX(100%);
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    will-change: transform;
+}
+
+.offcanvas-panel.abierto {
+    transform: translateX(0);
+}
+
+@media (min-width: 1200px) {
+    .offcanvas-panel { width: 25%; }
+}
+@media (min-width: 900px) and (max-width: 1199px) {
+    .offcanvas-panel { width: 40%; }
+}
+@media (min-width: 600px) and (max-width: 899px) {
+    .offcanvas-panel { width: 65%; }
+}
+@media (max-width: 599px) {
+    .offcanvas-panel { width: 100%; }
+}
+
+.offcanvas-header {
+    border-bottom: 2px solid #f3e8ff;
+    padding-bottom: 14px;
+    margin-bottom: 18px;
+    position: relative;
+    padding-right: 36px;
+}
+
+.offcanvas-header h3 {
+    margin: 0;
+    color: #750087;
+    font-size: 18px;
+}
+
+.btn-cerrar-offcanvas {
+    position: absolute;
+    top: 0;
+    right: 1rem;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 24px;
+    font-weight: 300;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    z-index: 5;
+}
+
+.btn-cerrar-offcanvas:hover {
+    color: #750087;
+    background: rgba(117, 0, 135, 0.08);
+}
+
+.offcanvas-body p {
+    margin: 0 0 14px 0;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-main);
+}
+
+.offcanvas-body p:last-child {
+    margin-bottom: 0;
+}
+
+/* MODALES GENERALES */
+.modal-overlay-generico {
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
+    z-index: 99999;
+    display: none; justify-content: center; align-items: center; padding: 15px; box-sizing: border-box;
+}
+.modal-contenido-generico {
+    background: #ffffff; border-radius: 16px; padding: 24px; width: 100%; max-width: 480px;
+    max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 40px rgba(0,0,0,0.2); text-align: left;
+    position: relative; box-sizing: border-box;
+}
+
+.modal-header-generico {
+    margin-bottom: 14px;
+    position: relative;
+    padding-right: 36px;
+}
+.modal-header-generico h3 {
+    color: #750087;
+    margin: 0;
+    font-size: 18px;
+}
+
+.btn-cerrar-modal {
+    position: absolute;
+    top: 0;
+    right: 1rem;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 24px;
+    font-weight: 300;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    z-index: 5;
+}
+
+.btn-cerrar-modal:hover {
+    color: #750087;
+    background: rgba(117, 0, 135, 0.08);
+}
+
+.modal-contenido-generico p, .modal-contenido-generico li { font-size: 13.5px; line-height: 1.5; color: var(--text-main); }
+
+.btn-modal-accion {
+    flex: 1;
+    margin-top: 0 !important;
+    padding: 10px 14px !important;
+    font-size: 13.5px !important;
+    border-radius: 10px !important;
+    text-align: center;
+}
+
+.btn-secundario-outline {
+    background: transparent !important;
+    border: 2px solid #cbd5e1 !important;
+    color: #475569 !important;
+    animation: none !important;
+}
+.btn-secundario-outline:hover {
+    background: #f8fafc !important;
+    border-color: #94a3b8 !important;
+    color: #0f172a !important;
+    filter: none !important;
+    transform: none !important;
+}
+
+.wrapper-principal {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 900px;
+    position: relative;
+    z-index: 1;
+}
+
+header, main, footer { width: 100%; }
+
+@keyframes entradaEscalonada {
+    0% { opacity: 0; transform: translateY(30px) scale(0.96); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.header-principal {
+    text-align: center;
+    margin-bottom: 22px;
+    padding: 0 5px;
+    opacity: 0;
+    animation: entradaEscalonada 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards;
+}
+
+main {
+    opacity: 0;
+    animation: entradaEscalonada 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards;
+}
+
+footer {
+    opacity: 0;
+    animation: entradaEscalonada 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.5s forwards;
+}
+
+@keyframes dadoArcoiris {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+@keyframes flotar {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-6px); }
+    100% { transform: translateY(0px); }
+}
+
+.hub-avatar {
+    width: 74px; height: 74px;
+    background: linear-gradient(135deg, #e40303, #ff8c00, #ffed00, #008026, #0044d4, #750087);
+    background-size: 300% 300%;
+    border-radius: 50%;
+    display: flex; justify-content: center; align-items: center;
+    margin: 0 auto 12px auto;
+    box-shadow: 0 8px 25px rgba(117, 0, 135, 0.3);
+    font-size: 32px;
+    animation: dadoArcoiris 8s ease infinite, flotar 4s ease-in-out infinite;
+}
+
+.header-principal h1 {
+    font-size: 22px; font-weight: 600; color: var(--text-main); margin: 0 0 6px 0; letter-spacing: -0.3px;
+}
+
+.header-principal h2 {
+    font-size: 14px; font-weight: 600; color: #750087; margin: 0; display: inline-block;
+    background: rgba(117, 0, 135, 0.08); padding: 6px 16px; border-radius: 20px;
+}
+
+.container {
+    background: var(--card-bg);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    padding: 28px 26px;
+    border-radius: var(--radius);
+    box-shadow: 0 16px 35px rgba(117, 0, 135, 0.15);
+    border: 1px solid var(--border-color);
+    position: relative;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+@keyframes bordeArcoirisMovil {
+    0% { filter: hue-rotate(0deg); }
+    100% { filter: hue-rotate(360deg); }
+}
+
+.container::before {
+    content: '';
+    position: absolute; left: 0; top: 0; height: 100%; width: 6px;
+    background: linear-gradient(to bottom, #e40303, #ff8c00, #ffed00, #008026, #0044d4, #750087);
+    background-size: 100% 300%;
+    animation: bordeArcoirisMovil 4s linear infinite;
+    border-top-left-radius: var(--radius);
+    border-bottom-left-radius: var(--radius);
+}
+
+.info-sutil-inscripcion {
+    background: #faf5ff;
+    border: 1px solid #e9d5ff;
+    color: #6b21a8;
+    padding: 12px 14px;
+    border-radius: 10px;
+    font-size: 13.5px;
+    font-weight: 500;
+    margin-bottom: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    text-align: left;
+}
+
+.container label {
+    display: flex; font-weight: 700; font-size: 14px; margin-top: 12px; margin-bottom: 6px; color: #475569;
+}
+
+@keyframes brilloInputArcoiris {
+    0% { filter: hue-rotate(0deg); }
+    100% { filter: hue-rotate(360deg); }
+}
+
+@keyframes glassSweepContinuous {
+    0% { background-position: -200% 0, 0% 50%; }
+    100% { background-position: 200% 0, 0% 50%; }
+}
+
+@keyframes bgArcoirisSutil {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+input[type="text"], input[type="tel"], input[type="number"], input[type="time"], textarea, select {
+    width: 100%; padding: 13px; box-sizing: border-box; border-radius: 12px;
+    font-size: 14.5px; font-weight: 500; color: var(--text-main);
+    border: 2px solid #cbd5e1;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+    margin-bottom: 6px;
+    font-family: inherit;
+    background: #ffffff;
+    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+input[type="text"]:focus, input[type="tel"]:focus, input[type="number"]:focus, input[type="time"]:focus, textarea:focus, select:focus {
+    outline: none;
+    border: 2px solid transparent;
+    background-image: 
+        linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.92) 50%, rgba(255,255,255,0) 100%),
+        linear-gradient(135deg, rgba(228, 3, 3, 0.03), rgba(255, 140, 0, 0.03), rgba(255, 237, 0, 0.03), rgba(0, 128, 38, 0.03), rgba(0, 68, 212, 0.03), rgba(117, 0, 135, 0.03)),
+        linear-gradient(135deg, rgba(228, 3, 3, 0.25), rgba(255, 140, 0, 0.25), rgba(255, 237, 0, 0.25), rgba(0, 128, 38, 0.25), rgba(0, 68, 212, 0.25), rgba(117, 0, 135, 0.25));
+    background-size: 200% 100%, 300% 300%, 300% 300%;
+    background-position: -200% 0, 0% 50%, 0% 50%;
+    background-origin: border-box;
+    background-clip: padding-box, border-box, border-box;
+    box-shadow: 0 0 12px rgba(117, 0, 135, 0.1);
+    animation: glassSweepContinuous 2.5s ease-in-out infinite, bgArcoirisSutil 8s ease infinite, brilloInputArcoiris 6s linear infinite;
+}
+
+.ayuda-input {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+    display: block;
+    font-weight: 400;
+}
+
+@keyframes bgArcoirisBtn {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+button {
+    width: 100%; margin-top: 16px; padding: 14px; border: none; border-radius: 12px; cursor: pointer;
+    background: linear-gradient(135deg, #e40303, #ff8c00, #ffed00, #008026, #0044d4, #750087);
+    background-size: 300% 300%; color: white; font-weight: 700; font-size: 15px;
+    animation: bgArcoirisBtn 8s ease infinite; transition: filter 0.2s ease;
+}
+
+.pantalla-completa { display: none; text-align: center; padding: 10px 0; }
+.pantalla-completa h3 { color: #750087; font-size: 20px; margin-top: 0; margin-bottom: 12px; }
+.pantalla-completa p { font-size: 14.5px; color: var(--text-main); line-height: 1.5; margin-bottom: 20px; }
+
+.caja-cuenta-atras {
+    background: #faf5ff; border: 2px dashed #c084fc; padding: 15px; border-radius: 12px; margin: 20px 0;
+}
+.caja-cuenta-atras span { font-size: 24px; font-weight: 800; color: #750087; display: block; margin-top: 6px; }
+
+/* =========================================================
+   LISTADO DE GANADORES: CENTRADO, GLASS ARCOÍRIS ANIMADO,
+   BORDE IZQUIERDO GRUESO Y SIN BORDES REDONDEADOS
+   ========================================================= */
+@keyframes arcoirisGlassAnim {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+.lista-afortunados-contenedor {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    margin: 15px 0;
+}
+
+.lista-afortunados {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    max-width: 380px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.lista-afortunados li {
+    background: linear-gradient(135deg, rgba(228, 3, 3, 0.08), rgba(255, 140, 0, 0.08), rgba(255, 237, 0, 0.08), rgba(0, 128, 38, 0.08), rgba(0, 68, 212, 0.08), rgba(117, 0, 135, 0.08));
+    background-size: 300% 300%;
+    animation: arcoirisGlassAnim 8s ease infinite;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    
+    border: 1px solid rgba(216, 180, 254, 0.5);
+    border-left: 6px solid #750087;
+    border-radius: 0px;
+    
+    color: #580065;
+    padding: 12px 18px;
+    font-weight: 700;
+    font-size: 15.5px;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(117, 0, 135, 0.08);
+}
+
+.alerta-vacia-estilo {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-left: 5px solid #750087;
+    padding: 14px 18px;
+    border-radius: 8px;
+    color: var(--text-main);
+    font-size: 14px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 10px 0;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+    text-align: left;
+}
+
+@keyframes barridoDesdeArriba {
+    0% { opacity: 0; transform: translate(-50%, -40px); }
+    100% { opacity: 1; transform: translate(-50%, 0); }
+}
+
+#mensajeError {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 500px;
+    color: #b91c1c;
+    background: #fee2e2;
+    border: 1px solid #fecaca;
+    padding: 14px 45px 14px 18px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    display: none;
+    z-index: 99999;
+    box-shadow: 0 10px 25px rgba(220, 38, 38, 0.25);
+    text-align: left;
+    box-sizing: border-box;
+    animation: barridoDesdeArriba 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.btn-cerrar-alerta {
+    position: absolute;
+    top: 20%;
+    right: 12px;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: #991b1b;
+    font-size: 20px;
+    font-weight: 300;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    width: 26px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.btn-cerrar-alerta:hover {
+    background: rgba(153, 27, 27, 0.12);
+    color: #7f1d1d;
+}
+
+.footer-informativo {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.5));
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(117, 0, 135, 0.15); padding: 12px 16px; border-radius: 20px; text-align: center; margin-top: 15px;
+    display: flex; flex-direction: column; gap: 6px; align-items: center;
+}
+.footer-informativo p { margin: 0; font-size: 12px; color: var(--text-muted); font-weight: 500; }
+
+.btn-enlace-legal {
+    background: transparent; 
+    border: none; 
+    color: #750087; 
+    font-size: 12px; 
+    font-weight: 600;
+    cursor: pointer; 
+    padding: 0; 
+    text-decoration: none; 
+    width: auto; 
+    margin-top: 2px;
+    transition: color 0.2s ease;
+}
+.btn-enlace-legal:hover { 
+    color: #580065; 
+    filter: none; 
+    transform: none; 
+}
+
+#spinnerOverlay {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); z-index: 9998;
+    display: none; justify-content: center; align-items: center; flex-direction: column; gap: 12px; color: white; font-weight: bold;
+}
+.spinner {
+    width: 40px; height: 40px; border: 4px solid rgba(255, 255, 255, 0.3);
+    border-top: 4px solid white; border-radius: 50%; animation: spin 0.8s linear infinite;
+}
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div id="floating-games-container"></div>
+<div class="esquina-opuesta-bg"></div>
+
+<!-- BOTÓN FLOTANTE SUPERIOR DERECHA PARA ABRIR INFO -->
+<button type="button" class="btn-flotante-info" onclick="toggleOffcanvasInfo(true)" title="Información y Normativa">ℹ️</button>
+
+<!-- OFFCANVAS / MODAL LATERAL DERECHO -->
+<div id="offcanvasOverlay" class="offcanvas-overlay" onclick="toggleOffcanvasInfo(false)">
+    <div id="offcanvasPanel" class="offcanvas-panel" onclick="event.stopPropagation()">
+        <button type="button" class="btn-cerrar-offcanvas" onclick="toggleOffcanvasInfo(false)" title="Cerrar">&times;</button>
+        <div class="offcanvas-header">
+            <h3>📖 Información de Expansionistas</h3>
+        </div>
+        <div class="offcanvas-body">
+            <p>🚀 <b>Hola Expansionistas</b> 🎲</p>
+            <p>Ya podéis inscribiros en el siguiente formulario si estáis interesados en venir a jugar el <b id="textoFechaGrupo">próximo martes</b> con los socios.</p>
+            <p>🍀 Por sorteo seleccionaremos hasta un <b>máximo de 3 miembros</b> que vendrán a jugar.</p>
+            <p>🏆 Los nombres seleccionados los sortearemos <b>sobre las 22:00 h</b> y se realizará por esta misma página; luego os contactaremos por <b>WhatsApp</b> para las gestiones oportunas.</p>
+            <p>🧭 El lugar donde jugamos es en el <b>Replay Boardgame Café</b>, Ribera de Curtidores 26, (Ⓜ️ Puerta de Toledo, Acacias, Embajadores).<br>
+            📍 <a href="https://maps.app.goo.gl/q7B8YrYoRyyujLaK8" target="_blank" style="color: #750087; font-weight: bold; text-decoration: underline;">Ver ubicación en Google Maps</a></p>
+            <p>🕠 El horario de juegos es <b>de 17:30 hasta el cierre 23:30</b>.</p>
+            <p>🌈 De forma paralela, el resto de expansionistas podéis reservar mesa para ir a jugar siempre que queráis en la planta de abajo del Replay directamente en su web:<br>
+            🌐 <a href="http://www.replayoutletcafe.com/reserva" target="_blank" style="color: #750087; font-weight: bold;">www.replayoutletcafe.com/reserva</a><br>
+            📞 <b>91 287 62 70</b></p>
+            <p>Un abrazote 🤗 y feliz <b id="textoDiaFeliz">martes</b> 🎲</p>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL DE CONFIRMACIÓN ANTES DE INSCRIBIRSE -->
+<div id="modalConfirmacion" class="modal-overlay-generico" onclick="event.stopPropagation()">
+    <div class="modal-contenido-generico">
+        <button type="button" class="btn-cerrar-modal" onclick="cerrarModalConfirmacion()" title="Cerrar">&times;</button>
+        <div class="modal-header-generico">
+            <h3>⚠️ Confirmar Tus Datos</h3>
+        </div>
+        <p>Por favor, comprueba que tus datos son correctos antes de confirmar la inscripción al sorteo:</p>
+        <div style="background: #faf5ff; border: 1px solid #d8b4fe; padding: 14px; border-radius: 10px; margin: 15px 0;">
+            <p style="margin: 0 0 8px 0;">👤 <b>Nombre / Apodo:</b> <span id="confNombre" style="color: #750087; font-weight: bold;"></span></p>
+            <p style="margin: 0;">📱 <b>Teléfono Móvil:</b> <span id="confTelefono" style="color: #750087; font-weight: bold;"></span></p>
+        </div>
+        <p style="font-size: 12.5px; color: var(--text-muted);">Recuerda que el número de móvil es único para verificar tu participación semanal y contactar contigo</p>
+        <div style="display: flex; gap: 10px; margin-top: 20px;">
+            <button type="button" class="btn-modal-accion btn-secundario-outline" onclick="cerrarModalConfirmacion()">Revisar</button>
+            <button type="button" class="btn-modal-accion" onclick="ejecutarInscripcionDefinitiva()">Sí, Todo Correcto</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL DE TEXTOS LEGALES Y PRIVACIDAD -->
+<div id="modalLegal" class="modal-overlay-generico" onclick="toggleModalLegal(false)">
+    <div class="modal-contenido-generico" onclick="event.stopPropagation()">
+        <button type="button" class="btn-cerrar-modal" onclick="toggleModalLegal(false)" title="Cerrar">&times;</button>
+        <div class="modal-header-generico">
+            <h3>⚖️ Aviso Legal, Privacidad y Cookies</h3>
+        </div>
+        
+        <p><b>1. Propiedad Intelectual y Licencia Restrictiva (All Rights Reserved):</b><br>
+        El diseño, código fuente, estructura, logotipos y contenidos de esta plataforma están protegidos por estrictas leyes de propiedad intelectual. Queda absolutamente prohibida su copia, distribución, reutilización, modificación, ingeniería inversa o utilización total o parcial en otros sitios web, aplicaciones o plataformas ajenas sin autorización expresa por escrito del grupo GMadrid juegos de mesa. Cualquier uso no autorizado será perseguido legalmente.</p>
+        
+        <p><b>2. Datos Recopilados y Almacenamiento Seguro:</b><br>
+        Al inscribirte, recopilamos tu nombre o apodo, número de teléfono (encriptado) y hora aproximada de llegada para la gestión exclusiva del sorteo de plazas de expansionistas. Estos datos se almacenan de forma segura en los servidores en la nube de Google Firebase. Al pulsar el botón de inscripción, aceptas expresamente el tratamiento de estos datos para los fines descritos.</p>
+
+        <p><b>3. Uso de Almacenamiento Local (Técnico):</b><br>
+        Esta página web utiliza almacenamiento local técnico (Local Storage) en tu navegador de forma exclusiva para recordar que ya has completado tu inscripción y evitar duplicidades durante el periodo del sorteo. No existen cookies de publicidad, rastreo ni analíticas de terceros.</p>
+
+        <p><b>4. Derechos, Consultas y Eliminación de Datos:</b><br>
+        Para cualquier duda, consulta, rectificación o para solicitar la eliminación permanente de tus datos de nuestros registros, puedes ponerte en contacto directamente con los administradores del grupo GMadrid juegos de mesa a través de nuestros canales oficiales de coordinación o WhatsApp.</p>
+
+        <button type="button" onclick="toggleModalLegal(false)" style="margin-top:15px; padding:10px;">Entendido y Aceptado</button>
+    </div>
+</div>
+
+<!-- ALERTA FLOTANTE FIJA SUPERIOR -->
+<div id="mensajeError"></div>
+
+<div id="spinnerOverlay">
+    <div class="spinner"></div>
+    <span id="textoSpinner">Procesando...</span>
+</div>
+
+<div class="wrapper-principal">
+    <header>
+        <div class="header-principal">
+            <div class="hub-avatar">🚀</div>
+            <h1>Inscripción de Expansión</h1>
+            <h2>GMadrid Juegos de Mesa 🏳️‍🌈</h2>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <!-- 1. BLOQUE DE FORMULARIO DE INSCRIPCIÓN -->
+            <div id="bloqueFormulario" style="display: none;">
+                <div class="info-sutil-inscripcion">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span>📅</span> <span id="textoInfoInscripcion">Inscripción abierta para el grupo de juego.</span>
+                    </div>
+                    <span style="font-size: 12.5px; color: #750087; font-weight: 600;">⚠️ Recuerda que un expansionista seleccionado no puede repetir ni ir a ambos grupos la misma semana.</span>
+                </div>
+
+                <form id="formInscripcion" novalidate onsubmit="validarFormularioInscripcion(event)">
+                    <input type="hidden" id="grupoAutodetectado">
+
+                    <label for="nombreExpansionista"><b>Nombre y/o Apodo: <span style="color:#e40303;">*</span></b></label>
+                    <input type="text" id="nombreExpansionista" placeholder="Ej: Alex (Expansionista)" autocomplete="off">
+
+                    <div id="grupoTelefonoContainer">
+                        <label for="telefonoExpansionista"><b>Número de Teléfono: <span style="color:#e40303;">*</span></b></label>
+                        <input type="tel" id="telefonoExpansionista" placeholder="600123456" maxlength="9" inputmode="numeric">
+                        <span class="ayuda-input">Introduce un móvil válido de 9 dígitos (debe empezar por 6 o 7 sin espacios).</span>
+                    </div>
+
+                    <label for="horaAproximada"><b>Hora aproximada a la que te puedes pasar:</b></label>
+                    <input type="time" id="horaAproximada" value="18:00">
+
+                    <label for="masInformacion"><b>Más información (ej: si traes algún juego):</b></label>
+                    <textarea id="masInformacion" placeholder="Ej: Puedo llevar Catan o Carcassonne..."></textarea>
+
+                    <button type="submit">Inscribirme al Sorteo</button>
+                </form>
+            </div>
+
+            <!-- FUERA DE PLAZO -->
+            <div id="bloqueFueraPlazo" class="pantalla-completa">
+                <h3>⏳ Fuera del Periodo de Inscripción</h3>
+                <div class="alerta-vacia-estilo">
+                    <span>⚠️</span> <span id="textoFueraPlazo">El plazo de inscripción para este grupo no está abierto en este momento.</span>
+                </div>
+            </div>
+
+            <!-- 2. BLOQUE DE PANTALLA COMPLETA: ÉXITO / CUENTA ATRÁS -->
+            <div id="bloqueExito" class="pantalla-completa">
+                <h3>🎉 ¡Inscripción Registrada con Éxito!</h3>
+                <p>Tus datos se han guardado correctamente. El sorteo oficial se realizará hoy a las 22:00h.</p>
+                
+                <div class="caja-cuenta-atras">
+                    <span>Tiempo restante para el sorteo:</span>
+                    <span id="relojCuentaAtras">--:--:--</span>
+                </div>
+                <p style="font-size: 12.5px; color: var(--text-muted);">Vuelve a esta misma página a las 22:00h para ver el resultado en directo.</p>
+            </div>
+
+            <!-- 3. BLOQUE DE PANTALLA COMPLETA: RESULTADOS DEL SORTEO -->
+            <div id="bloqueSorteoRealizado" class="pantalla-completa">
+                <h3>🏆 ¡Sorteo de Expansionistas Realizado!</h3>
+                <p>Estos son los afortunados seleccionados para venir a jugar este <b id="textoSorteoRealizadoFecha">martes</b> al <b id="textoGrupoRealizadoNombre">grupo de martes</b>:</p>
+                
+                <!-- LISTADO CENTRADO CON EFECTO GLASS ARCOÍRIS, BORDE IZQUIERDO GRUESO Y SIN REDONDEAR -->
+                <div class="lista-afortunados-contenedor">
+                    <ul id="listaGanadores" class="lista-afortunados"></ul>
+                </div>
+
+                <div style="background: #faf5ff; border: 1px solid #d8b4fe; padding: 12px 16px; border-radius: 10px; margin: 15px 0; text-align: left;">
+                    <p style="margin: 0; font-size: 13.5px; color: #580065;">📱 <b>¡Atención seleccionados!</b> Estad pendientes, en breve conectaremos con vosotros por un mensaje de <b>WhatsApp</b> para las gestiones oportunas.</p>
+                </div>
+
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px 16px; border-radius: 10px; margin: 15px 0; text-align: left;">
+                    <p id="textoAgradecimientoNoSeleccionados" style="margin: 0; font-size: 13.5px; color: var(--text-muted);">❤️ <b>Muchas gracias a todos los no seleccionados</b> por participar en el sorteo de esta semana. ¡No os desaniméis e intentadlo de nuevo para el próximo sorteo del <b>grupo de jueves</b> el <b>19 de noviembre de 2026</b>!</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="footer-informativo">
+            <p id="fechaHoy"></p>
+            <button type="button" class="btn-enlace-legal" onclick="toggleModalLegal(true)">Aviso Legal, Privacidad y Cookies</button>
+        </div>
+    </footer>
+</div>
+
+<script>
+window.addEventListener('DOMContentLoaded', () => {
+    const container = document.getElementById("floating-games-container");
+    const gameEmotes = ["🎲", "♟️", "👑", "♞", "🃏", "🎯", "🧩", "🦄", "🌈"];
+
+    function spawnGameItem() {
+        const item = document.createElement("div");
+        item.classList.add("floating-game-item");
+        item.textContent = gameEmotes[Math.floor(Math.random() * gameEmotes.length)];
+
+        const fromLeft = Math.random() < 0.5;
+        const startX = fromLeft ? -50 : window.innerWidth + 50;
+        const endX = fromLeft ? window.innerWidth + 50 : -50;
+
+        const startY = Math.random() * window.innerHeight;
+        const endY = startY + (Math.random() * 200 - 100);
+
+        const rotation = (Math.random() - 0.5) * 720;
+        const duration = 6 + Math.random() * 6;
+
+        item.style.setProperty("--start-x", startX + "px");
+        item.style.setProperty("--start-y", startY + "px");
+        item.style.setProperty("--end-x", endX + "px");
+        item.style.setProperty("--end-y", endY + "px");
+        item.style.setProperty("--rotacion", rotation + "deg");
+        item.style.animation = `lanzarDeLadoALado ${duration}s linear forwards`;
+
+        container.appendChild(item);
+
+        setTimeout(() => { item.remove(); }, duration * 1000);
+    }
+
+    setInterval(spawnGameItem, 1500);
+    for(let i = 0; i < 4; i++) { setTimeout(spawnGameItem, i * 400); }
+
+    function actualizarRelojFooter() {
+        const ahora = new Date();
+        const opcionesFecha = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        const fechaStr = ahora.toLocaleDateString('es-ES', opcionesFecha);
+        const horaStr = ahora.toLocaleTimeString('es-ES');
+        const elemFecha = document.getElementById("fechaHoy");
+        if (elemFecha) {
+            elemFecha.innerHTML = `${fechaStr.charAt(0).toUpperCase() + fechaStr.slice(1)} — ${horaStr}`;
+        }
+    }
+    actualizarRelojFooter();
+    setInterval(actualizarRelojFooter, 1000);
+});
+
+window.toggleOffcanvasInfo = function(abrir) {
+    const overlay = document.getElementById("offcanvasOverlay");
+    const panel = document.getElementById("offcanvasPanel");
+    if (abrir) {
+        overlay.classList.add("abierto");
+        panel.classList.add("abierto");
+    } else {
+        overlay.classList.remove("abierto");
+        panel.classList.remove("abierto");
+    }
+};
+
+window.toggleModalLegal = function(abrir) {
+    const modal = document.getElementById("modalLegal");
+    modal.style.display = abrir ? "flex" : "none";
+};
+
+window.cerrarAlertaError = function() {
+    const err = document.getElementById("mensajeError");
+    if (err) err.style.display = "none";
+};
+
+window.cerrarModalConfirmacion = function() {
+    document.getElementById("modalConfirmacion").style.display = "none";
+};
+</script>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/13.2.0/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  doc,
+  setDoc,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/13.2.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA5vN0AbfISP-g-TrvX4Y34cZM8lejrYUM",
+  authDomain: "fichaje-gmadrid.firebaseapp.com",
+  projectId: "fichaje-gmadrid",
+  storageBucket: "fichaje-gmadrid.firebasestorage.app",
+  messagingSenderId: "794464212993",
+  appId: "1:794464212993:web:7cd442168aa97f63d9c800"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const CLAVE_SECRETA_AES = "GMadrid_Clave_Secreta_Expansionistas_2026";
+
+function encriptarTelefono(telefono) {
+    return CryptoJS.AES.encrypt(telefono, CLAVE_SECRETA_AES).toString();
+}
+
+function desencriptarTelefono(telefonoCifrado) {
+    try {
+        const bytes = CryptoJS.AES.decrypt(telefonoCifrado, CLAVE_SECRETA_AES);
+        return bytes.toString(CryptoJS.enc.Utf8) || telefonoCifrado;
+    } catch (e) {
+        return telefonoCifrado;
+    }
+}
+
+function mostrarSpinner(texto = "Procesando...") {
+    document.getElementById("textoSpinner").textContent = texto;
+    document.getElementById("spinnerOverlay").style.display = "flex";
+}
+function ocultarSpinner() {
+    document.getElementById("spinnerOverlay").style.display = "none";
+}
+
+function mostrarError(texto) {
+    const err = document.getElementById("mensajeError");
+    err.innerHTML = `⚠️ ${texto} <button type="button" class="btn-cerrar-alerta" onclick="cerrarAlertaError()" title="Cerrar">&times;</button>`;
+    err.style.display = "block";
+    ocultarSpinner();
+}
+
+function sanitizarId(nombre) {
+  return nombre.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().replace(/\s+/g, "_");
+}
+
+window.verificarVentanaInscripcionYSorteo = async function() {
+    const ahora = new Date();
+    const diaSemana = ahora.getDay(); 
+    const hora = ahora.getHours();
+    const minutos = ahora.getMinutes();
+    const horaDecimal = hora + minutos / 60;
+
+    const yaSeInscribioLocal = localStorage.getItem("gmadrid_expansionista_inscrito");
+
+    const bloqueForm = document.getElementById("bloqueFormulario");
+    const bloqueExito = document.getElementById("bloqueExito");
+    const bloqueSorteo = document.getElementById("bloqueSorteoRealizado");
+    const bloqueFuera = document.getElementById("bloqueFueraPlazo");
+
+    bloqueForm.style.display = "none";
+    bloqueExito.style.display = "none";
+    bloqueSorteo.style.display = "none";
+    bloqueFuera.style.display = "none";
+
+    let grupoAsignado = "";
+    let textoDiaStr = "";
+    if (diaSemana === 0) {
+        grupoAsignado = "martes";
+        textoDiaStr = "martes";
+    } else if (diaSemana === 2) {
+        grupoAsignado = "jueves";
+        textoDiaStr = "jueves";
+    } else {
+        grupoAsignado = "martes";
+        textoDiaStr = "martes";
+    }
+
+    document.getElementById("grupoAutodetectado").value = grupoAsignado;
+    document.getElementById("textoFechaGrupo").textContent = `próximo ${textoDiaStr}`;
+    document.getElementById("textoDiaFeliz").textContent = textoDiaStr;
+
+    const fechaProximoGrupo = new Date();
+    if (diaSemana === 0) {
+        fechaProximoGrupo.setDate(ahora.getDate() + 2);
+    } else if (diaSemana === 2) {
+        fechaProximoGrupo.setDate(ahora.getDate() + 2);
+    } else {
+        fechaProximoGrupo.setDate(ahora.getDate() + ((2 - diaSemana + 7) % 7));
+    }
+    const opcionesFecha = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+    const fechaLegible = fechaProximoGrupo.toLocaleDateString('es-ES', opcionesFecha);
+
+    document.getElementById("textoInfoInscripcion").innerHTML = 
+        `Inscripción para el grupo del <b>${textoDiaStr.charAt(0).toUpperCase() + textoDiaStr.slice(1)} (${fechaLegible})</b>`;
+
+    const fechaActualStr = ahora.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    document.getElementById("textoSorteoRealizadoFecha").textContent = fechaActualStr;
+    document.getElementById("textoGrupoRealizadoNombre").textContent = `grupo de ${textoDiaStr}`;
+
+    const fechaSiguienteSorteo = new Date(ahora);
+    fechaSiguienteSorteo.setDate(ahora.getDate() + (textoDiaStr === 'martes' ? 2 : 5));
+    const fechaSiguienteLegible = fechaSiguienteSorteo.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    const siguienteGrupoNombre = textoDiaStr === 'martes' ? 'jueves' : 'martes';
+
+    document.getElementById("textoAgradecimientoNoSeleccionados").innerHTML = 
+        `❤️ <b>Muchas gracias a todos los no seleccionados</b> por participar en el sorteo de esta semana. ¡No os desaniméis e intentadlo de nuevo para el próximo sorteo del <b>grupo de ${siguienteGrupoNombre}</b> el <b>${fechaSiguienteLegible}</b>!`;
+
+    const MODO_PRUEBAS = true;  
+    if (MODO_PRUEBAS) {
+        bloqueForm.style.display = "block";
+        return;
+    }
+
+    if ((diaSemana === 0 && horaDecimal >= 22) || (diaSemana === 2 && horaDecimal >= 22)) {
+        bloqueSorteo.style.display = "block";
+        ejecutarOComprobarSorteo();
+        return;
+    }
+
+    if (yaSeInscribioLocal && ((diaSemana === 0 && horaDecimal < 22) || (diaSemana === 2 && horaDecimal < 22))) {
+        bloqueExito.style.display = "block";
+        iniciarCuentaAtras();
+        return;
+    }
+
+    const esVentanaMartes = (diaSemana === 0 && horaDecimal >= 6 && horaDecimal < 22);
+    const esVentanaJueves = (diaSemana === 2 && horaDecimal >= 6 && horaDecimal < 22);
+
+    if (esVentanaMartes || esVentanaJueves) {
+        bloqueForm.style.display = "block";
+    } else {
+        bloqueFuera.style.display = "block";
+        document.getElementById("textoFueraPlazo").textContent = 
+            "El plazo de inscripción solo está abierto los Domingos (para el grupo de Martes) y los Martes (para el grupo de Jueves) en horario de 06:00h a 22:00h.";
+    }
+};
+
+function iniciarCuentaAtras() {
+    const reloj = document.getElementById("relojCuentaAtras");
+    
+    function actualizar() {
+        const ahora = new Date();
+        const objetivo = new Date();
+        objetivo.setHours(22, 0, 0, 0);
+
+        const diferencia = objetivo - ahora;
+        if (diferencia <= 0) {
+            verificarVentanaInscripcionYSorteo();
+            return;
+        }
+
+        const horas = Math.floor((diferencia % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutos = Math.floor((diferencia % (1000 * 60 * 60)) / (1000 * 60));
+        const segundos = Math.floor((diferencia % (1000 * 60)) / 1000);
+
+        reloj.textContent = `${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}:${String(segundos).padStart(2, '0')}`;
+    }
+
+    actualizar();
+    setInterval(actualizar, 1000);
+}
+
+window.validarFormularioInscripcion = function(event) {
+    event.preventDefault();
+    document.getElementById("mensajeError").style.display = "none";
+
+    const nombreInput = document.getElementById("nombreExpansionista").value.trim();
+    const telefonoInput = document.getElementById("telefonoExpansionista").value.trim();
+    const patronTelefono = /^[67]\d{8}$/;
+
+    if (!nombreInput) {
+        mostrarError("El campo 'Nombre o Apodo' es obligatorio.");
+        return;
+    }
+
+    if (!telefonoInput) {
+        mostrarError("El número de teléfono móvil es obligatorio.");
+        return;
+    }
+    if (!patronTelefono.test(telefonoInput)) {
+        mostrarError("El número de teléfono no es válido. Debe ser un móvil español de 9 dígitos (empezar por 6 o 7) sin espacios.");
+        return;
+    }
+
+    document.getElementById("confNombre").textContent = nombreInput;
+    document.getElementById("confTelefono").textContent = telefonoInput;
+    document.getElementById("modalConfirmacion").style.display = "flex";
+};
+
+window.ejecutarInscripcionDefinitiva = async function() {
+    cerrarModalConfirmacion();
+    mostrarSpinner("Comprobando disponibilidad del número de teléfono...");
+
+    const nombreInput = document.getElementById("nombreExpansionista").value.trim();
+    const telefonoInput = document.getElementById("telefonoExpansionista").value.trim();
+    const grupoSeleccionado = document.getElementById("grupoAutodetectado").value;
+    const horaAproximadaInput = document.getElementById("horaAproximada").value;
+    const masInformacionInput = document.getElementById("masInformacion").value.trim();
+
+    try {
+        const querySnapshot = await getDocs(collection(db, "expansionista"));
+        let telefonoYaRegistrado = false;
+
+        querySnapshot.forEach(docSnap => {
+            let data = docSnap.data();
+            if (data.telefono) {
+                let telefonoDesencriptado = desencriptarTelefono(data.telefono);
+                if (telefonoDesencriptado === telefonoInput) {
+                    telefonoYaRegistrado = true;
+                }
+            }
+        });
+
+        if (telefonoYaRegistrado) {
+            mostrarError("Este número de teléfono ya se encuentra inscrito en el sistema para esta semana. El teléfono móvil es único por participante.");
+            return;
+        }
+
+        mostrarSpinner("Encriptando y guardando inscripción...");
+
+        const idDoc = sanitizarId(nombreInput);
+        const refDoc = doc(db, "expansionista", idDoc);
+        
+        const telefonoCifrado = encriptarTelefono(telefonoInput);
+        const ahoraObj = new Date();
+        const fechaInscripcion = ahoraObj.toLocaleDateString('es-ES');
+        const horaInscripcion = ahoraObj.toLocaleTimeString('es-ES');
+
+        const datosExpansionista = {
+            nombre: nombreInput,
+            grupo: grupoSeleccionado,
+            telefono: telefonoCifrado,
+            horaAproximada: horaAproximadaInput || "18:00",
+            masInformacion: masInformacionInput || "",
+            fechaInscripcion: fechaInscripcion,
+            horaInscripcion: horaInscripcion,
+            seleccionado: false,
+            timestamp: ahoraObj.getTime()
+        };
+
+        await setDoc(refDoc, datosExpansionista);
+
+        localStorage.setItem("gmadrid_expansionista_inscrito", "true");
+        ocultarSpinner();
+        verificarVentanaInscripcionYSorteo();
+
+    } catch (error) {
+        console.error("Error al inscribir:", error);
+        mostrarError("Error al conectar con la base de datos. Inténtelo de nuevo.");
+    }
+};
+
+async function ejecutarOComprobarSorteo() {
+    mostrarSpinner("Realizando sorteo entre los inscritos...");
+    try {
+        const refPlazas = doc(db, "config_sorteo_expansion", "plazas");
+        ocultarSpinner();
+    } catch (error) {
+        console.error("Error en el sorteo:", error);
+        ocultarSpinner();
+    }
+}
+
+verificarVentanaInscripcionYSorteo();
+</script>
+
+</body>
+</html>
