@@ -4,9 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Inscripción de Expansión - GMadrid</title>
-<link rel="icon"
-type="image/svg+xml"
-href='data:image/svg+xml,
+<link rel="icon" type="image/svg+xml" href='data:image/svg+xml,
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
 <rect y="0" width="64" height="10.6" fill="%23e40303"/>
 <rect y="10.6" width="64" height="10.6" fill="%23ff8c00"/>
@@ -537,10 +535,6 @@ button {
 }
 .caja-cuenta-atras span { font-size: 24px; font-weight: 800; color: #750087; display: block; margin-top: 6px; }
 
-/* =========================================================
-   LISTADO DE GANADORES: CENTRADO, GLASS ARCOÍRIS ANIMADO,
-   BORDE IZQUIERDO GRUESO Y SIN BORDES REDONDEADOS
-   ========================================================= */
 @keyframes arcoirisGlassAnim {
     0% { background-position: 0% 50%; }
     50% { background-position: 100% 50%; }
@@ -727,7 +721,7 @@ button {
 </div>
 
 <!-- MODAL DE CONFIRMACIÓN ANTES DE INSCRIBIRSE -->
-<div id="modalConfirmacion" class="modal-overlay-generico" onclick="event.stopPropagation()">
+<div id="modalConfirmacion" class="modal-overlay-generico" onclick="if(event.target === this) cerrarModalConfirmacion()">
     <div class="modal-contenido-generico">
         <button type="button" class="btn-cerrar-modal" onclick="cerrarModalConfirmacion()" title="Cerrar">&times;</button>
         <div class="modal-header-generico">
@@ -747,7 +741,7 @@ button {
 </div>
 
 <!-- MODAL DE TEXTOS LEGALES Y PRIVACIDAD -->
-<div id="modalLegal" class="modal-overlay-generico" onclick="toggleModalLegal(false)">
+<div id="modalLegal" class="modal-overlay-generico" onclick="if(event.target === this) toggleModalLegal(false)">
     <div class="modal-contenido-generico" onclick="event.stopPropagation()">
         <button type="button" class="btn-cerrar-modal" onclick="toggleModalLegal(false)" title="Cerrar">&times;</button>
         <div class="modal-header-generico">
@@ -801,20 +795,27 @@ button {
                 <form id="formInscripcion" novalidate onsubmit="validarFormularioInscripcion(event)">
                     <input type="hidden" id="grupoAutodetectado">
 
+                    <!-- CAMPO TRAMPA / HONEYPOT ANTIBOTS (Oculto visualmente y para lectores de pantalla) -->
+                    <div style="display:none !important;" aria-hidden="true">
+                        <label for="website_trap">Si eres humano, deja este campo en blanco:</label>
+                        <input type="text" id="website_trap" name="website_trap" autocomplete="off" tabindex="-1">
+                    </div>
+
                     <label for="nombreExpansionista"><b>Nombre y/o Apodo: <span style="color:#e40303;">*</span></b></label>
                     <input type="text" id="nombreExpansionista" placeholder="Ej: Alex (Expansionista)" autocomplete="off">
 
                     <div id="grupoTelefonoContainer">
                         <label for="telefonoExpansionista"><b>Número de Teléfono: <span style="color:#e40303;">*</span></b></label>
-                        <input type="tel" id="telefonoExpansionista" placeholder="600123456" maxlength="9" inputmode="numeric">
+                        <input type="tel" id="telefonoExpansionista" placeholder="Ej: 600123456" maxlength="9" inputmode="numeric">
                         <span class="ayuda-input">Introduce un móvil válido de 9 dígitos (debe empezar por 6 o 7 sin espacios).</span>
                     </div>
 
                     <label for="horaAproximada"><b>Hora aproximada a la que te puedes pasar:</b></label>
                     <input type="time" id="horaAproximada" value="18:00">
 
-                    <label for="masInformacion"><b>Más información (ej: si traes algún juego):</b></label>
+                    <label for="masInformacion"><b>Más información:</b></label>
                     <textarea id="masInformacion" placeholder="Ej: Puedo llevar Catan o Carcassonne..."></textarea>
+					<span class="ayuda-input">Puede traer un juego de mesa si quieres y enseñarnoslo, estaremos encantados.</span>
 
                     <button type="submit">Inscribirme al Sorteo</button>
                 </form>
@@ -845,7 +846,6 @@ button {
                 <h3>🏆 ¡Sorteo de Expansionistas Realizado!</h3>
                 <p>Estos son los afortunados seleccionados para venir a jugar este <b id="textoSorteoRealizadoFecha">martes</b> al <b id="textoGrupoRealizadoNombre">grupo de martes</b>:</p>
                 
-                <!-- LISTADO CENTRADO CON EFECTO GLASS ARCOÍRIS, BORDE IZQUIERDO GRUESO Y SIN REDONDEAR -->
                 <div class="lista-afortunados-contenedor">
                     <ul id="listaGanadores" class="lista-afortunados"></ul>
                 </div>
@@ -951,8 +951,8 @@ import {
   getFirestore,
   collection,
   doc,
-  setDoc,
-  getDocs
+  getDoc,
+  setDoc
 } from "https://www.gstatic.com/firebasejs/13.2.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -973,13 +973,8 @@ function encriptarTelefono(telefono) {
     return CryptoJS.AES.encrypt(telefono, CLAVE_SECRETA_AES).toString();
 }
 
-function desencriptarTelefono(telefonoCifrado) {
-    try {
-        const bytes = CryptoJS.AES.decrypt(telefonoCifrado, CLAVE_SECRETA_AES);
-        return bytes.toString(CryptoJS.enc.Utf8) || telefonoCifrado;
-    } catch (e) {
-        return telefonoCifrado;
-    }
+function normalizarTelefonoId(telefono) {
+    return (telefono || "").replace(/\s+/g, "").replace(/[^0-9+]/g, "");
 }
 
 function mostrarSpinner(texto = "Procesando...") {
@@ -995,10 +990,6 @@ function mostrarError(texto) {
     err.innerHTML = `⚠️ ${texto} <button type="button" class="btn-cerrar-alerta" onclick="cerrarAlertaError()" title="Cerrar">&times;</button>`;
     err.style.display = "block";
     ocultarSpinner();
-}
-
-function sanitizarId(nombre) {
-  return nombre.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().replace(/\s+/g, "_");
 }
 
 window.verificarVentanaInscripcionYSorteo = async function() {
@@ -1061,7 +1052,7 @@ window.verificarVentanaInscripcionYSorteo = async function() {
     const siguienteGrupoNombre = textoDiaStr === 'martes' ? 'jueves' : 'martes';
 
     document.getElementById("textoAgradecimientoNoSeleccionados").innerHTML = 
-        `❤️ <b>Muchas gracias a todos los no seleccionados</b> por participar en el sorteo de esta semana. ¡No os desaniméis e intentadlo de nuevo para el próximo sorteo del <b>grupo de ${siguienteGrupoNombre}</b> el <b>${fechaSiguienteLegible}</b>!`;
+        `❤️ <b>Muchas gracias a todos los no seleccionados</b> por participar en el sorteo de esta semana. ¡Not os desaniméis e intentadlo de nuevo para el próximo sorteo del <b>grupo de ${siguienteGrupoNombre}</b> el <b>${fechaSiguienteLegible}</b>!`;
 
     const MODO_PRUEBAS = true;  
     if (MODO_PRUEBAS) {
@@ -1122,6 +1113,14 @@ window.validarFormularioInscripcion = function(event) {
     event.preventDefault();
     document.getElementById("mensajeError").style.display = "none";
 
+    // 🛡️ COMPROBACIÓN DEL CAMPO TRAMPA (HONEYPOT ANTIBOTS)
+    const campoTrampa = document.getElementById("website_trap").value.trim();
+    if (campoTrampa !== "") {
+        console.warn("Actividad de bot detectada en campo trampa.");
+        mostrarError("Se ha detectado un comportamiento automatizado. No se permite el registro.");
+        return;
+    }
+
     const nombreInput = document.getElementById("nombreExpansionista").value.trim();
     const telefonoInput = document.getElementById("telefonoExpansionista").value.trim();
     const patronTelefono = /^[67]\d{8}$/;
@@ -1156,29 +1155,17 @@ window.ejecutarInscripcionDefinitiva = async function() {
     const masInformacionInput = document.getElementById("masInformacion").value.trim();
 
     try {
-        const querySnapshot = await getDocs(collection(db, "expansionista"));
-        let telefonoYaRegistrado = false;
-
-        querySnapshot.forEach(docSnap => {
-            let data = docSnap.data();
-            if (data.telefono) {
-                let telefonoDesencriptado = desencriptarTelefono(data.telefono);
-                if (telefonoDesencriptado === telefonoInput) {
-                    telefonoYaRegistrado = true;
-                }
-            }
-        });
-
-        if (telefonoYaRegistrado) {
+        const telId = normalizarTelefonoId(telefonoInput);
+        const refDoc = doc(db, "expansionista", telId);
+        
+        const docSnap = await getDoc(refDoc);
+        if (docSnap.exists()) {
             mostrarError("Este número de teléfono ya se encuentra inscrito en el sistema para esta semana. El teléfono móvil es único por participante.");
             return;
         }
 
         mostrarSpinner("Encriptando y guardando inscripción...");
 
-        const idDoc = sanitizarId(nombreInput);
-        const refDoc = doc(db, "expansionista", idDoc);
-        
         const telefonoCifrado = encriptarTelefono(telefonoInput);
         const ahoraObj = new Date();
         const fechaInscripcion = ahoraObj.toLocaleDateString('es-ES');
